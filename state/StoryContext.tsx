@@ -45,6 +45,7 @@ interface StoryContextType {
   generateRewrite: (instruction: string) => Promise<void>;
   extractAndSyncCharacters: (silent?: boolean, storyOverride?: Story) => Promise<void>;
   addCharacter: (char: Character) => void;
+  updateCharacter: (char: Character) => void;
   reindexCurrentChapter: (silent?: boolean, storyOverride?: Story) => Promise<void>; 
   updateWorldLore: (lore: string[]) => Promise<void>;
   saveProgress: () => Promise<void>;
@@ -157,7 +158,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     for (const charProfile of canonData.character_profiles) {
                         const factText = `[Hồ sơ Canon] ${charProfile.name}: ${charProfile.core}`;
                         if (!extractedFacts.has(factText)) {
-                            const embedding = await geminiService.embedText(factText);
+                            const embedding = await geminiService.embedText(factText, 'RETRIEVAL_DOCUMENT', `[Hồ sơ Canon] Nhân vật: ${charProfile.name}`);
                             if (embedding.length > 0) {
                                 initialVectors.push({
                                     id: crypto.randomUUID(), storyId, text: factText,
@@ -178,7 +179,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     for (const rule of canonData.rules) {
                         const ruleText = `[Luật Canon]: ${rule}`;
                          if (!extractedFacts.has(ruleText)) {
-                            const embedding = await geminiService.embedText(ruleText);
+                            const embedding = await geminiService.embedText(ruleText, 'RETRIEVAL_DOCUMENT', '[Luật Canon] Quy tắc thế giới');
                              if (embedding.length > 0) {
                                 initialVectors.push({
                                     id: crypto.randomUUID(), storyId, text: ruleText,
@@ -197,7 +198,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                      // C. Vector hóa Relationships
                     for (const rel of canonData.relationships) {
                          if (!extractedFacts.has(rel)) {
-                            const embedding = await geminiService.embedText(rel);
+                            const embedding = await geminiService.embedText(rel, 'RETRIEVAL_DOCUMENT', '[Quan hệ Canon] Liên kết nhân vật');
                              if (embedding.length > 0) {
                                 initialVectors.push({
                                     id: crypto.randomUUID(), storyId, text: `[Quan hệ Canon]: ${rel}`,
@@ -216,7 +217,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     // D. Vector hóa Raw Text (Style Reference) - NEW FIX
                     // Embed a shorter snippet of the chunk (4000 chars) to stay within embedding limit and capture style
                     const styleSnippet = chunk.slice(0, 4000); 
-                    const rawEmbedding = await geminiService.embedText(styleSnippet);
+                    const rawEmbedding = await geminiService.embedText(styleSnippet, 'RETRIEVAL_DOCUMENT', '[Nguyên tác] Trích đoạn văn phong');
                     if (rawEmbedding.length > 0) {
                         initialVectors.push({
                             id: crypto.randomUUID(), storyId, text: `[Trích đoạn Nguyên tác]: ${styleSnippet}`,
@@ -264,7 +265,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     newStory.characters = fanficData.characters;
                     for (const char of fanficData.characters) {
                          const text = `[Hồ sơ Wiki] ${char.name}: ${char.core_personality}. ${char.description}`;
-                         const embedding = await geminiService.embedText(text);
+                         const embedding = await geminiService.embedText(text, 'RETRIEVAL_DOCUMENT', `[Hồ sơ Wiki] Nhân vật: ${char.name}`);
                          if (embedding.length > 0) {
                              initialVectors.push({
                                  id: crypto.randomUUID(), storyId, text,
@@ -291,7 +292,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 newStory.characters = validChars;
                 for (const char of validChars) {
                      const text = `${char.name} là ${char.role}. ${char.description} Đặc điểm: ${char.traits.join(', ')}.`;
-                     const embedding = await geminiService.embedText(text);
+                     const embedding = await geminiService.embedText(text, 'RETRIEVAL_DOCUMENT', `[Hồ sơ Truyện] Nhân vật: ${char.name}`);
                      if (embedding.length > 0) {
                          initialVectors.push({
                              id: crypto.randomUUID(), storyId, text,
@@ -399,7 +400,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           const chunks = chunkingService.chunkTextByParagraph(chapter.content, { target: 850, max: 1200 });
           const newVectors: VectorData[] = [];
           for (const chunk of chunks) {
-               const chunkEmbedding = await geminiService.embedText(chunk);
+               const chunkEmbedding = await geminiService.embedText(chunk, 'RETRIEVAL_DOCUMENT', `[Chương] ${chapter.title}`);
                if (chunkEmbedding.length > 0) {
                    const presentCharIds = identifyCharactersInText(chunk, targetStory.characters);
                    newVectors.push({
@@ -460,7 +461,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const newVectors: VectorData[] = [];
         for (const char of newChars) {
             const text = `${char.name} là ${char.role}. ${char.description} Đặc điểm: ${char.traits.join(', ')}.`;
-            const embedding = await geminiService.embedText(text);
+            const embedding = await geminiService.embedText(text, 'RETRIEVAL_DOCUMENT', `[Cập nhật nhân vật] Hồ sơ: ${char.name}`);
             if (embedding.length > 0) {
                 newVectors.push({
                     id: crypto.randomUUID(), storyId: targetStory.id, text,
@@ -509,7 +510,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
       }
 
-      const queryEmbedding = await geminiService.embedText(`Truy xuất: ${finalInstruction} ${contextTextForQuery}`);
+      const queryEmbedding = await geminiService.embedText(`${finalInstruction} ${contextTextForQuery}`, 'RETRIEVAL_QUERY');
       const activeCharIds = identifyCharactersInText(contextTextForQuery, currentStory.characters);
       const candidates = vectors.filter(v => !(v.metadata.type === 'chapter' && v.metadata.referenceId === activeChapterId));
       
@@ -576,7 +577,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 // Update State
                 setStory(prev => prev ? ({ ...prev, chapters: prev.chapters.map(c => c.id === activeChapterId ? { ...c, summary } : c) }) : null);
                 
-                const summaryEmbedding = await geminiService.embedText(summary);
+                const summaryEmbedding = await geminiService.embedText(summary, 'RETRIEVAL_DOCUMENT', `[Tóm tắt] Chương: ${currentChapter.title}`);
                 if (summaryEmbedding.length > 0) {
                      const summaryVector: VectorData = {
                         id: crypto.randomUUID(), storyId: currentStory.id, text: `[Tóm tắt ${currentChapter.title}]: ${summary}`,
@@ -675,6 +676,15 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const addCharacter = (char: Character) => setStory(prev => prev ? ({ ...prev, characters: [...prev.characters, char] }) : null);
   
+  const updateCharacter = (updatedChar: Character) => setStory(prev => {
+    if (!prev) return null;
+    const newChars = prev.characters.map(c => c.id === updatedChar.id ? updatedChar : c);
+    const updatedStory = { ...prev, characters: newChars };
+    storageService.saveStory(updatedStory).catch(console.error);
+    storyRef.current = updatedStory;
+    return updatedStory;
+  });
+  
   const exportStory = async (id?: string) => {
     const targetStory = id ? storiesList.find(s => s.id === id) : story;
     if (!targetStory) return;
@@ -720,7 +730,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       story, storiesList, isStoriesLoaded, activeChapterId, characters: story?.characters || [],
       isGenerating, generationStatus, tokenStats, userInstruction, setUserInstruction, loadStories, createStory,
       openStory, closeStory, deleteStory, updateStorySettings, selectChapter, addChapter,
-      updateChapterContent, generateContinue, generateRewrite, extractAndSyncCharacters, addCharacter,
+      updateChapterContent, generateContinue, generateRewrite, extractAndSyncCharacters, addCharacter, updateCharacter,
       reindexCurrentChapter, updateWorldLore, saveProgress,
       exportStory, importStory
     }}>

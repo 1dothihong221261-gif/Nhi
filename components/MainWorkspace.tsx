@@ -9,7 +9,7 @@ export const MainWorkspace: React.FC = () => {
     const { story, generateContinue, isGenerating, generationStatus, tokenStats, userInstruction, setUserInstruction, updateStorySettings } = useStory();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State cho Mobile Sidebar
-    const [isMobilePanelCollapsed, setIsMobilePanelCollapsed] = useState(false); // State cho Mobile Collapse
+    const [isMobilePanelCollapsed, setIsMobilePanelCollapsed] = useState(true); // State cho Mobile Collapse (mặc định thu gọn)
 
     const handleGenerate = async () => {
         await generateContinue();
@@ -27,7 +27,7 @@ export const MainWorkspace: React.FC = () => {
             {/* Mobile Overlay Backdrop */}
             {isSidebarOpen && (
                 <div 
-                    className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-sm transition-opacity animate-fadeIn"
+                    className="fixed inset-0 bg-black/80 z-40 md:hidden transition-opacity animate-fadeIn"
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}
@@ -38,14 +38,42 @@ export const MainWorkspace: React.FC = () => {
                 onClose={() => setIsSidebarOpen(false)}
             />
 
-            <main className="flex-1 flex flex-col relative z-0 w-full">
-                {/* Mobile Hamburger Button - TEXT ONLY */}
-                <button 
-                    onClick={() => setIsSidebarOpen(true)}
-                    className="md:hidden fixed top-4 left-4 z-30 p-2 bg-gray-900/60 backdrop-blur border border-gray-700 rounded-lg text-gray-400 hover:text-white hover:border-primary-500 transition-all shadow-lg text-xs font-bold uppercase"
-                >
-                    MENU
-                </button>
+            <main className="flex-1 flex flex-col relative z-0 w-full overflow-hidden">
+                {/* Mobile Top Header Navigation */}
+                <div className="md:hidden h-14 shrink-0 bg-gray-900 border-b border-gray-800 px-4 flex items-center justify-between z-30 select-none shadow-md">
+                    <button 
+                        onClick={() => setIsSidebarOpen(true)}
+                        className="px-3 py-1.5 bg-gray-800 hover:bg-gray-750 text-gray-400 hover:text-white rounded border border-gray-750 transition-colors text-xs font-bold uppercase"
+                    >
+                        MENU
+                    </button>
+                    <span className="text-sm font-serif font-bold text-gray-200 truncate max-w-[150px] px-2" title={story?.title}>
+                        {story?.title}
+                    </span>
+                    <div className="flex gap-1.5">
+                        {story?.vnBlueprintMode && (
+                            <button 
+                                onClick={() => {
+                                    window.dispatchEvent(new CustomEvent('toggle-vn-bible'));
+                                }}
+                                className="px-2.5 py-1.5 bg-primary-950/40 text-primary-400 hover:text-primary-300 border border-primary-900/35 rounded text-[10px] font-black uppercase tracking-wider flex items-center gap-1"
+                                title="Mở Cẩm nang VN"
+                            >
+                                📘 VN
+                            </button>
+                        )}
+                        <button 
+                            onClick={toggleNsfw}
+                            className={`text-[9.5px] font-black px-2 py-1.5 rounded border transition-all ${
+                                story?.nsfw 
+                                ? 'bg-red-950/40 text-red-400 border-red-500/40 shadow-[0_0_10px_rgba(239,68,68,0.15)]' 
+                                : 'text-gray-500 border-gray-800 hover:text-gray-400'
+                            }`}
+                        >
+                            18+
+                        </button>
+                    </div>
+                </div>
 
                 <Editor />
                 

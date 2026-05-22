@@ -1,6 +1,7 @@
 import { Character, EntityRegistry } from '../../types';
 import { NSFW_INSTRUCTION } from './contentSafetyRules';
 import { getVnBlueprintPrompt } from './vnBlueprints';
+import { GENRE_ANIME_PROMPT } from './genreAnime';
 
 export const promptBuilderService = {
   buildSystemInstruction: (
@@ -21,6 +22,12 @@ export const promptBuilderService = {
     
     // VN Blueprint Rules
     const vnRules = vnBlueprintMode ? getVnBlueprintPrompt(nsfw) : "";
+
+    // GENRE ANIME INTERACTION
+    const isAnimeGenre = genre && genre.toLowerCase().includes('anime');
+    const animePromptExtension = isAnimeGenre 
+      ? `\n### 🎏 SYSTEM SKILLS & TOOLS PROMPT FOR ANIME GENRE:\n${GENRE_ANIME_PROMPT}\n` 
+      : "";
 
     // EXISTENCE LOCK LOGIC
     let existenceLock = "";
@@ -62,6 +69,7 @@ ${contentRating}
 ${fanficInstruction}
 ${existenceLock}
 
+${animePromptExtension}
 ${vnRules}
 
 🗣️ **QUY TẮC XƯNG HÔ & HỘI THOẠI (BẮT BUỘC):**

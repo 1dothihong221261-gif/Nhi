@@ -103,7 +103,7 @@ export const CreateWizard: React.FC<{ onCancel: () => void }> = ({ onCancel }) =
 
         {/* LOADING OVERLAY */}
         {isGenerating && (
-            <div className="absolute inset-0 z-50 bg-gray-950/90 backdrop-blur-sm flex flex-col items-center justify-center animate-fadeIn">
+            <div className="absolute inset-0 z-50 bg-gray-950/90 flex flex-col items-center justify-center animate-fadeIn">
                 <div className="relative w-20 h-20 mb-8">
                      <div className="absolute inset-0 rounded-full border-t-2 border-b-2 border-primary-500 animate-spin"></div>
                      <div className="absolute inset-3 rounded-full border-r-2 border-l-2 border-purple-500 animate-spin" style={{animationDirection: 'reverse', animationDuration: '2s'}}></div>
@@ -127,7 +127,7 @@ export const CreateWizard: React.FC<{ onCancel: () => void }> = ({ onCancel }) =
             </div>
         )}
 
-        <div className={`max-w-2xl w-full glass-panel p-8 rounded-2xl shadow-2xl border border-gray-800 z-10 transition-all duration-500 max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${isGenerating ? 'blur-sm scale-95 opacity-50 pointer-events-none' : ''}`}>
+        <div className={`max-w-2xl w-full glass-panel p-4 sm:p-8 rounded-2xl shadow-2xl border border-gray-800 z-10 transition-all duration-500 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${isGenerating ? 'blur-sm scale-95 opacity-50 pointer-events-none' : ''}`}>
             <div className="flex justify-between items-start mb-6">
                  <button onClick={onCancel} className="text-gray-500 hover:text-white transition-colors" disabled={isGenerating}>
                     &larr; Hủy bỏ
@@ -226,7 +226,7 @@ export const CreateWizard: React.FC<{ onCancel: () => void }> = ({ onCancel }) =
                             </div>
                         )}
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Thể Loại</label>
                                 <input type="text" value={genre} onChange={(e) => setGenre(e.target.value)} className="w-full bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-primary-500 outline-none" placeholder={storyType === 'fanfic' ? "VD: Đồng nhân, Hệ thống..." : "Tiên hiệp, Cyberpunk..."} />

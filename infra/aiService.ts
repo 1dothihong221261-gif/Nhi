@@ -5,7 +5,7 @@ import { promptBuilderService } from "../narrative/prompting/narrativePromptAsse
 const MODEL_WRITING_PRIMARY = 'gemini-3.5-flash';
 const MODEL_WRITING_FALLBACK = 'gemini-3.1-pro-preview';
 const MODEL_AUX = 'gemini-3.5-flash';
-const MODEL_EMBEDDING = 'gemini-embedding-001';
+const MODEL_EMBEDDING = 'gemini-embedding-2';
 
 // Cooldown mechanism for Primary Model (3.5 Flash / 3.1 Pro)
 const MODEL_COOLDOWN_DURATION = 60 * 60 * 1000; // 1 hour
@@ -67,13 +67,28 @@ export interface CanonExtractionResult {
 
 export const geminiService = {
   
-  async embedText(text: string): Promise<number[]> {
+  async embedText(
+    text: string, 
+    taskType: 'RETRIEVAL_QUERY' | 'RETRIEVAL_DOCUMENT' | 'SEMANTIC_SIMILARITY' = 'RETRIEVAL_DOCUMENT',
+    title?: string,
+    outputDimensionality?: number
+  ): Promise<number[]> {
     if (!text || text.length < 5) return []; 
     try {
       const ai = getAI();
+      const config: any = {
+        taskType: taskType,
+      };
+      if (outputDimensionality) {
+        config.outputDimensionality = outputDimensionality;
+      }
+      if (taskType === 'RETRIEVAL_DOCUMENT' && title) {
+        config.title = title;
+      }
       const response = await ai.models.embedContent({
         model: MODEL_EMBEDDING, 
-        contents: [{ parts: [{ text: text }] }]
+        contents: text,
+        config
       });
       return response.embeddings?.[0]?.values || [];
     } catch (e) {
@@ -227,7 +242,7 @@ export const geminiService = {
                 setPrimaryModelCooldown();
             }
             console.warn(`Primary model ${MODEL_WRITING_PRIMARY} failed, switching to fallback ${MODEL_WRITING_FALLBACK}. Error:`, e);
-            useFallback = false;
+            useFallback = true;
         }
     }
 
@@ -321,7 +336,7 @@ export const geminiService = {
                 setPrimaryModelCooldown();
             }
             console.warn(`Primary model ${MODEL_WRITING_PRIMARY} failed for rewrite, switching to fallback ${MODEL_WRITING_FALLBACK}. Error:`, e);
-            useFallback = false;
+            useFallback = true;
         }
     }
 
@@ -521,7 +536,9 @@ export const geminiService = {
             contents: [{ parts: [{ text: prompt }] }],
             config: {
                 systemInstruction: systemInstruction,
-                thinkingConfig: { thinkingBudget: 4096 }
+                thinkingConfig: {
+                    thinkingLevel: ThinkingLevel.HIGH
+                }
             }
         });
         return response.text || "";

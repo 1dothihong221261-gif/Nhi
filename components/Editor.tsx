@@ -1,6 +1,6 @@
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStory } from '../state/StoryContext';
 
 export const Editor: React.FC = () => {
@@ -21,6 +21,22 @@ export const Editor: React.FC = () => {
   const [activeVnTab, setActiveVnTab] = useState<'pov' | 'lexicon' | 'outline' | 'fullwrite'>('lexicon');
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
   
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setShowVnBible(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleToggleVnBible = () => {
+      setShowVnBible(prev => !prev);
+    };
+    window.addEventListener('toggle-vn-bible', handleToggleVnBible);
+    return () => {
+      window.removeEventListener('toggle-vn-bible', handleToggleVnBible);
+    };
+  }, []);
+
   const activeChapter = story?.chapters.find(c => c.id === activeChapterId);
 
   if (!activeChapter) {
@@ -134,77 +150,79 @@ export const Editor: React.FC = () => {
       <div className="flex-1 overflow-y-auto relative scroll-smooth flex flex-col h-full bg-gray-950">
         
         {/* --- FLOATING TOOLBAR --- */}
-        <div className="sticky top-4 right-4 z-40 flex justify-end px-4 md:px-8 pointer-events-none mb-2">
-            <div className="pointer-events-auto flex items-center gap-2 bg-gray-900/90 backdrop-blur border border-gray-700 rounded-lg p-1.5 shadow-xl transition-all relative">
+        <div className="sticky top-4 right-4 z-40 flex justify-end px-2 md:px-8 pointer-events-none mb-2 animate-fadeIn">
+            <div className="pointer-events-auto flex items-center gap-1 sm:gap-2 bg-gray-900/95 backdrop-blur border border-gray-700 rounded-lg p-1 sm:p-1.5 shadow-xl transition-all relative">
                
                {/* VN Blueprint Trigger */}
                {story?.vnBlueprintMode && (
                    <button 
                       onClick={() => setShowVnBible(!showVnBible)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded transition-all border ${
+                      className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-bold rounded transition-all border ${
                           showVnBible 
-                          ? 'bg-primary-900/30 text-primary-400 border-primary-500/50' 
+                          ? 'bg-primary-900/40 text-primary-300 border-primary-500/50 shadow-sm' 
                           : 'bg-gray-800/50 text-gray-400 border-transparent hover:text-white'
                       }`}
                       title="Mở Cẩm nang VN & Từ vựng cảm quan"
                    >
-                      📘 Cẩm nang VN
+                      <span>📘 <span className="hidden xs:inline sm:inline">Cẩm nang</span> VN</span>
                    </button>
                )}
 
-               {story?.vnBlueprintMode && <div className="w-px h-4 bg-gray-700 mx-0.5"></div>}
+               {story?.vnBlueprintMode && <div className="w-px h-4 bg-gray-700 mx-0.5 animate-pulse"></div>}
 
-               {/* NSFW Toggle shortcut */}
+               {/* NSFW Toggle shortcut - Hidden on mobile because it's in top navigation */}
                <button 
                   onClick={toggleNsfw}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-black rounded transition-all border ${
+                  className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-black rounded transition-all border ${
                       story?.nsfw 
                       ? 'bg-red-900/40 text-red-400 border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.2)]' 
-                      : 'bg-gray-800/50 text-gray-600 border-transparent hover:text-gray-400'
+                      : 'bg-gray-800/50 text-gray-650 border-transparent hover:text-gray-405'
                   }`}
                   title={story?.nsfw ? "Chế độ NSFW đang BẬT" : "Bật chế độ NSFW"}
                >
                   18+
                </button>
 
-               <div className="w-px h-4 bg-gray-700 mx-0.5"></div>
+               <div className="hidden md:block w-px h-4 bg-gray-700 mx-0.5"></div>
 
                {/* AI Edit Trigger */}
                <button
                   onClick={() => setShowAiEdit(!showAiEdit)}
                   disabled={isGenerating}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded transition-all border ${
+                  className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-bold rounded transition-all border ${
                       showAiEdit
-                      ? 'bg-purple-900/30 text-purple-400 border-purple-500/50'
-                      : 'bg-gray-800/50 text-purple-400/80 border-transparent hover:text-purple-300'
+                      ? 'bg-purple-900/40 text-purple-300 border-purple-500/50'
+                      : 'bg-gray-800/50 text-purple-400 border-transparent hover:text-purple-350'
                   }`}
                >
-                  <span className="text-[10px]">✨</span> Sửa bằng AI
+                  <span className="text-[10px]">✨</span>
+                  <span className="hidden sm:inline"> Sửa bằng AI</span>
+                  <span className="sm:hidden"> Sửa AI</span>
                </button>
 
                {/* AI Edit Popover */}
                {showAiEdit && (
-                   <div className="absolute top-full right-0 mt-2 w-72 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl p-3 z-50 animate-fadeIn">
+                   <div className="absolute top-full right-0 mt-2 w-72 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl p-3 z-[60] animate-fadeIn">
                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-2">Bạn muốn sửa gì?</label>
                        <textarea 
                           value={rewriteInstruction}
                           onChange={(e) => setRewriteInstruction(e.target.value)}
-                          className="w-full h-24 bg-black/40 border border-gray-600 rounded p-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 mb-2 resize-none"
-                          placeholder="VD: Viết lại đoạn này theo văn phong vn-fullwrite gợi cảm, thêm đẫm mồ hôi..."
+                          className="w-full h-24 bg-black/40 border border-gray-600 rounded p-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 mb-2 resize-none"
+                          placeholder="VD: Viết lại đoạn này theo văn phong gợi cảm, miêu tả sắc bén hơn..."
                           autoFocus
                        />
                        <div className="flex justify-end gap-2">
                            <button 
                               onClick={() => setShowAiEdit(false)}
-                              className="text-xs text-gray-500 hover:text-white px-2 py-1"
+                              className="text-xs text-gray-400 hover:text-white px-2 py-1"
                            >
-                               Hủy
+                              Hủy
                            </button>
                            <button 
                               onClick={handleRewrite}
-                              className="text-xs bg-purple-600 hover:bg-purple-500 text-white font-bold px-3 py-1 rounded shadow"
+                              className="text-xs bg-purple-600 hover:bg-purple-500 text-white font-bold px-3 py-1 bg-gradient-to-r from-purple-600 to-purple-500 rounded shadow hover:shadow-purple-500/20"
                            >
-                               Thực hiện
+                              Thực hiện
                            </button>
                        </div>
                    </div>
@@ -215,16 +233,22 @@ export const Editor: React.FC = () => {
                {/* Mode Toggle */}
                <button 
                   onClick={() => setIsEditMode(!isEditMode)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded transition-all border ${
+                  className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-bold rounded transition-all border ${
                       isEditMode 
-                      ? 'bg-primary-900/20 text-primary-400 border-primary-900/50 shadow-inner' 
+                      ? 'bg-primary-900/30 text-primary-300 border-primary-900/40' 
                       : 'text-gray-400 hover:text-white hover:bg-gray-800 border-transparent'
                   }`}
                >
                   {isEditMode ? (
-                      <span>Sửa thủ công</span>
+                      <>
+                          <span className="hidden sm:inline">Sửa thủ công</span>
+                          <span className="sm:hidden">Viết</span>
+                      </>
                   ) : (
-                      <span>Chế độ Đọc</span>
+                      <>
+                          <span className="hidden sm:inline">Chế độ Đọc</span>
+                          <span className="sm:hidden">Đọc</span>
+                      </>
                   )}
                </button>
             </div>
@@ -239,11 +263,11 @@ export const Editor: React.FC = () => {
                   onChange={(e) => {
                       // Handled by sidebar name triggers by default
                   }} 
-                  className="w-full bg-transparent text-3xl md:text-4xl font-serif font-bold text-gray-100 mb-8 focus:outline-none border-b border-transparent focus:border-gray-800 transition-colors mt-4 md:mt-0"
+                  className="w-full bg-transparent text-2xl md:text-4xl font-serif font-bold text-gray-100 mb-6 focus:outline-none border-b border-transparent focus:border-gray-800 transition-colors mt-6 md:mt-0"
                   placeholder="Tiêu đề chương"
               />
           ) : (
-              <h1 className="text-3xl md:text-4xl font-serif font-bold text-white mb-8 mt-4 md:mt-0 pb-1 border-b border-transparent">
+              <h1 className="text-2xl md:text-4xl font-serif font-bold text-white mb-6 mt-6 md:mt-0 pb-1 border-b border-transparent">
                   {activeChapter.title}
               </h1>
           )}
@@ -288,16 +312,22 @@ export const Editor: React.FC = () => {
 
       {/* RIGHT SIDEBAR: BLUEPRINT CANH SANG TAC */}
       {showVnBible && story?.vnBlueprintMode && (
-          <div className="hidden lg:flex w-80 border-l border-gray-800 bg-gray-900/60 backdrop-blur flex-col h-full overflow-hidden animate-slideIn">
-              <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/80 shrink-0">
-                  <div>
-                      <h3 className="text-sm font-black text-primary-400 flex items-center gap-1.5">
-                          🎭 CẨM NANG VN (BETA)
-                      </h3>
-                      <p className="text-[10px] text-gray-500 font-bold uppercase">Sát Vách Lão Vương Blueprint</p>
+          <>
+              {/* Mobile overlay backdrop for Cẩm nang VN */}
+              <div 
+                  className="fixed inset-0 bg-black/80 z-[45] lg:hidden transition-opacity animate-fadeIn"
+                  onClick={() => setShowVnBible(false)}
+              />
+              <div className="fixed inset-y-0 right-0 z-[50] w-80 h-full bg-gray-900 border-l border-gray-800 flex flex-col overflow-hidden lg:relative lg:translate-x-0 lg:z-0 lg:h-full animate-slideIn">
+                  <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/80 shrink-0">
+                      <div>
+                          <h3 className="text-sm font-black text-primary-400 flex items-center gap-1.5">
+                              🎭 CẨM NANG VN (BETA)
+                          </h3>
+                          <p className="text-[10px] text-gray-500 font-bold uppercase w-48 truncate">Sát Vách Lão Vương Blueprint</p>
+                      </div>
+                      <button onClick={() => setShowVnBible(false)} className="text-gray-400 hover:text-white p-1 text-lg font-bold leading-none">&times;</button>
                   </div>
-                  <button onClick={() => setShowVnBible(false)} className="text-gray-500 hover:text-white">&times;</button>
-              </div>
 
               {/* Tab Selector */}
               <div className="flex border-b border-gray-850 bg-gray-900/40 shrink-0 text-[10px]">
@@ -384,6 +414,7 @@ export const Editor: React.FC = () => {
                   <span className="text-primary-500">Active</span>
               </div>
           </div>
+          </>
       )}
 
     </div>

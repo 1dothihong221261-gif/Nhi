@@ -59,16 +59,16 @@ export const StoryLibrary: React.FC<{ onCreateNew: () => void }> = ({ onCreateNe
     };
 
     return (
-        <div className="min-h-screen bg-gray-950 p-8 font-sans">
+        <div className="min-h-screen bg-gray-950 p-4 sm:p-8 font-sans">
              <div className="max-w-6xl mx-auto">
                 <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
                     <div>
                         <div className="flex flex-col gap-2 mb-4">
-                            <h1 className="text-5xl font-serif font-bold bg-gradient-to-r from-primary-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-fadeIn drop-shadow-sm leading-tight">
+                            <h1 className="text-4xl sm:text-5xl font-serif font-bold bg-gradient-to-r from-primary-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-fadeIn drop-shadow-sm leading-tight">
                                 Aetheria
                             </h1>
                             <div className="flex items-center gap-3 animate-fadeIn">
-                                <span className="text-[11px] text-gray-400 font-bold uppercase tracking-widest bg-gray-900 border border-gray-800 px-2 py-1 rounded shadow-sm">
+                                <span className="text-[11px] text-gray-400 font-bold uppercase tracking-widest bg-gray-900 border border-gray-800 px-2 py-1 rounded shadow-sm py-0.5">
                                     Builder: Sát Vách Lão Vương
                                 </span>
                             </div>
@@ -85,7 +85,7 @@ export const StoryLibrary: React.FC<{ onCreateNew: () => void }> = ({ onCreateNe
                             </a>
                         </div>
                     </div>
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                         <input 
                             type="file" 
                             ref={fileInputRef} 
@@ -95,13 +95,13 @@ export const StoryLibrary: React.FC<{ onCreateNew: () => void }> = ({ onCreateNe
                         />
                         <button 
                             onClick={() => fileInputRef.current?.click()}
-                            className="bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center gap-2 transition-transform hover:-translate-y-1 border border-gray-700 uppercase text-xs"
+                            className="bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white font-bold py-2.5 px-4 sm:py-3 sm:px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-transform hover:-translate-y-1 border border-gray-700 uppercase text-xs w-full sm:w-auto"
                         >
                             NHẬP (IMPORT)
                         </button>
                         <button 
                             onClick={onCreateNew}
-                            className="bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-500 hover:to-purple-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center gap-2 transition-transform hover:-translate-y-1 border border-white/10 uppercase text-xs"
+                            className="bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-500 hover:to-purple-500 text-white font-bold py-2.5 px-4 sm:py-3 sm:px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-transform hover:-translate-y-1 border border-white/10 uppercase text-xs w-full sm:w-auto"
                         >
                             + TẠO TRUYỆN MỚI
                         </button>

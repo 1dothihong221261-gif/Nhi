@@ -10,6 +10,54 @@ export const StorySettingsModal: React.FC<{ isOpen: boolean; onClose: () => void
     });
     
     const [pronounStyleId, setPronounStyleId] = useState<string>('custom');
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            const doc = document as any;
+            setIsFullscreen(!!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement));
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+        
+        handleFullscreenChange();
+
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+        };
+    }, []);
+
+    const toggleFullscreen = () => {
+        const docEl = document.documentElement as any;
+        const doc = document as any;
+        
+        if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.mozFullScreenElement && !doc.msFullscreenElement) {
+            if (docEl.requestFullscreen) {
+                docEl.requestFullscreen().catch((err: any) => console.log(err));
+            } else if (docEl.webkitRequestFullscreen) {
+                docEl.webkitRequestFullscreen();
+            } else if (docEl.mozRequestFullScreen) {
+                docEl.mozRequestFullScreen();
+            } else if (docEl.msRequestFullscreen) {
+                docEl.msRequestFullscreen();
+            }
+        } else {
+            if (doc.exitFullscreen) {
+                doc.exitFullscreen().catch((err: any) => console.log(err));
+            } else if (doc.webkitExitFullscreen) {
+                doc.webkitExitFullscreen();
+            } else if (doc.mozCancelFullScreen) {
+                doc.mozCancelFullScreen();
+            } else if (doc.msExitFullscreen) {
+                doc.msExitFullscreen();
+            }
+        }
+    };
 
     useEffect(() => {
         if (story && isOpen) {
@@ -73,14 +121,37 @@ export const StorySettingsModal: React.FC<{ isOpen: boolean; onClose: () => void
         : "";
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-            <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col">
-                <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-white">Cài đặt Truyện</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white">&times;</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 animate-fadeIn">
+            <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+                <div className="p-4 sm:p-6 border-b border-gray-800 flex justify-between items-center shrink-0">
+                    <h2 className="text-lg sm:text-xl font-bold text-white">Cài đặt Truyện</h2>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white p-1 text-2xl leading-none">&times;</button>
                 </div>
-                <div className="p-6 space-y-4 overflow-y-auto">
-                    <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+                    {/* Toàn màn hình (Tối ưu cho Điện thoại) */}
+                    <div className="bg-gradient-to-r from-gray-800/60 to-slate-900/40 p-3 sm:p-4 rounded-xl border border-gray-700/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fadeIn">
+                        <div className="flex-1">
+                            <span className="text-sm font-bold text-primary-400 flex items-center gap-1.5">
+                                📱 CHẾ ĐỘ TOÀN MÀN HÌNH
+                            </span>
+                            <span className="text-[11px] text-gray-400 block mt-0.5 leading-relaxed">
+                                Tự động tối ưu không gian hiển thị, ẩn thanh trạng thái & điều hướng của trình duyệt để đạt trải nghiệm đọc/viết tập trung tối đa trên điện thoại.
+                            </span>
+                        </div>
+                        <button 
+                            type="button"
+                            onClick={toggleFullscreen}
+                            className={`w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all duration-200 border shadow-md active:scale-95 ${
+                                isFullscreen 
+                                ? 'bg-primary-950/40 text-primary-400 border-primary-500/40 shadow-[0_0_12px_rgba(14,165,233,0.15)] hover:bg-primary-950/60' 
+                                : 'bg-gray-800 text-gray-300 border-gray-750 hover:text-white hover:bg-gray-700'
+                            }`}
+                        >
+                            {isFullscreen ? 'ĐANG BẬT 🟢 (Màn hình rộng)' : 'BẬT TOÀN MÀN HÌNH'}
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs text-gray-500 uppercase mb-1">Tiêu đề</label>
                             <input className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
@@ -96,7 +167,7 @@ export const StorySettingsModal: React.FC<{ isOpen: boolean; onClose: () => void
                         <input className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white" value={formData.writingStyle} onChange={e => setFormData({...formData, writingStyle: e.target.value})} placeholder="VD: Hài hước, Trầm buồn, Sắc bén..." />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                          <div>
                             <label className="block text-xs text-gray-500 uppercase mb-1">Góc nhìn</label>
                             <select className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white" value={formData.pov} onChange={e => setFormData({...formData, pov: e.target.value})}>
